@@ -62,7 +62,7 @@ const cfgPage=id=>NAV.find(x=>norm(x.id)===norm(id))||{id,label:pretty(id),icon:
 let activeSession=null;async function getSession(){if(activeSession&&(!activeSession.expires_at||activeSession.expires_at*1000-Date.now()>30000))return activeSession;const {data:{session},error}=await sb.auth.getSession();if(error)throw error;activeSession=session||null;return activeSession}
 async function invoke(name,body={}){
   const s=await getSession();if(!s)throw Object.assign(new Error('AUTH_REQUIRED'),{status:401});
-  const payload=window.S4UWithPortal(ctpaPayload({...body,legacy_endpoint:name}));
+  const payload=window.S4UWithPortal({...body,legacy_endpoint:name});
   const r=await fetch(`${C.workforceUrl}/functions/v1/ctpa-employer-dot-actions`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${s.access_token}`,'apikey':C.workforceKey},body:JSON.stringify(payload)});
   const d=await r.json().catch(()=>({}));
   const em=typeof d.error==='string'?d.error:(d.error?.message||d.message||d.details||d.hint||'');
