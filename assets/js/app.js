@@ -437,7 +437,7 @@ async function init(){
     const s=await getSession();if(!s){location.replace('https://portal.screenings4u.com/');return}
     const startingMid=stored(),startingCache=readBrandCache(startingMid);if(startingCache?.branding)primeBranding(startingCache.branding);
     const prefetchedBrand=startingMid?fetchBranding().catch(e=>{console.warn('Branding prefetch unavailable',e);return null}):null;
-    const ctx=await access();if(ctx.requires_workspace_selection){location.replace('https://portal.screenings4u.com/selector.html');return}if(!ctx.has_access)throw new Error(ctx.reason||'Portal access denied.');if(ctx.portal_code!==C.portalCode||!ctx.employer||!ctx.organization)throw new Error('This account is not authorized for the DOT Employer portal.');const planCode=String(ctx.plan?.code||ctx.subscription?.plans?.code||ctx.subscription?.plan_code||'');if(planCode&&!planCode.startsWith('dot_employer_'))throw new Error('This subscription is not a DOT Employer plan.');
+    const ctx=await access();if(ctx.requires_workspace_selection){throw new Error('Select a sponsored employer subscription from the central portal.')}if(!ctx.has_access)throw new Error(ctx.reason||'Portal access denied.');if(ctx.portal_code!==C.portalCode||!ctx.employer||!ctx.organization)throw new Error('This account is not authorized for the DOT Employer portal.');const planCode=String(ctx.plan?.code||ctx.subscription?.plans?.code||ctx.subscription?.plan_code||'');if(planCode&&!planCode.startsWith('dot_employer_'))throw new Error('This subscription is not a DOT Employer plan.');
     saveMid(ctx.membership?.id);window.portalCtx=ctx;
     const cache=readBrandCache(ctx.membership?.id);if(cache?.branding)primeBranding(cache.branding);
     shell(ctx);
