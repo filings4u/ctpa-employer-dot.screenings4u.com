@@ -108,7 +108,7 @@ function shell(ctx){
     if(norm(current)!=='support')supportCtxWrite({page_url:location.href,page_title:document.title,page_id:current,captured_at:new Date().toISOString(),opened_from:'top_support'});
     if(norm(current)!=='support')location.href='/support.html';
   };
-  $('#logout').onclick=async()=>{await sb.auth.signOut();location.replace('/login.html')};
+  $('#logout').onclick=async()=>{await sb.auth.signOut();location.replace('https://portal.screenings4u.com/')};
 }
 function metric(label,value,note=''){return `<div class="metric"><small>${esc(label)}</small><strong>${esc(value)}</strong><span>${esc(note)}</span></div>`}
 function read(o,keys){for(const k of keys){let v=o;for(const p of k.split('.'))v=v?.[p];if(v!==undefined&&v!==null&&v!=='')return v}return'—'}
@@ -434,10 +434,10 @@ async function render(ctx){
 
 async function init(){
   try{
-    const s=await getSession();if(!s){location.replace('/login.html');return}
+    const s=await getSession();if(!s){location.replace('https://portal.screenings4u.com/');return}
     const startingMid=stored(),startingCache=readBrandCache(startingMid);if(startingCache?.branding)primeBranding(startingCache.branding);
     const prefetchedBrand=startingMid?fetchBranding().catch(e=>{console.warn('Branding prefetch unavailable',e);return null}):null;
-    const ctx=await access();if(ctx.requires_workspace_selection){location.replace('/workspace.html');return}if(!ctx.has_access)throw new Error(ctx.reason||'Portal access denied.');if(ctx.portal_code!==C.portalCode||!ctx.employer||!ctx.organization)throw new Error('This account is not authorized for the DOT Employer portal.');const planCode=String(ctx.plan?.code||ctx.subscription?.plans?.code||ctx.subscription?.plan_code||'');if(planCode&&!planCode.startsWith('dot_employer_'))throw new Error('This subscription is not a DOT Employer plan.');
+    const ctx=await access();if(ctx.requires_workspace_selection){location.replace('https://portal.screenings4u.com/selector.html');return}if(!ctx.has_access)throw new Error(ctx.reason||'Portal access denied.');if(ctx.portal_code!==C.portalCode||!ctx.employer||!ctx.organization)throw new Error('This account is not authorized for the DOT Employer portal.');const planCode=String(ctx.plan?.code||ctx.subscription?.plans?.code||ctx.subscription?.plan_code||'');if(planCode&&!planCode.startsWith('dot_employer_'))throw new Error('This subscription is not a DOT Employer plan.');
     saveMid(ctx.membership?.id);window.portalCtx=ctx;
     const cache=readBrandCache(ctx.membership?.id);if(cache?.branding)primeBranding(cache.branding);
     shell(ctx);
@@ -447,7 +447,7 @@ async function init(){
     if(!cache){await brandPromise;document.body.classList.remove('loading')}else brandPromise.catch(()=>{});
     await renderPromise;
   }
-  catch(e){if(e.status===401||e.message==='AUTH_REQUIRED'){await sb.auth.signOut();location.replace('/login.html');return}document.body.className='login-page';document.body.innerHTML=`<main class="login-card"><img class="login-logo" src="/assets/img/logo.png"><h1>Portal unavailable</h1><p>${esc(e.message||String(e))}</p><a class="btn primary" href="/login.html">Return to login</a></main>`}
+  catch(e){if(e.status===401||e.message==='AUTH_REQUIRED'){await sb.auth.signOut();location.replace('https://portal.screenings4u.com/');return}document.body.className='login-page';document.body.innerHTML=`<main class="login-card"><img class="login-logo" src="/assets/img/logo.png"><h1>Portal unavailable</h1><p>${esc(e.message||String(e))}</p><a class="btn primary" href="https://portal.screenings4u.com/">Return to login</a></main>`}
 }
 window.Portal={invoke,sb,refresh:()=>render(window.portalCtx)};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
