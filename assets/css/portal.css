@@ -414,3 +414,7 @@ body[data-portal-page="pools"] .table-wrap .empty{padding:14px 6px!important}
 
 /* Cloudflare Turnstile — shared DOT portal login */
 .turnstile-wrap{min-height:67px;margin:13px 0 5px;display:flex;align-items:center;justify-content:center;overflow:hidden}.turnstile-wrap>div{width:100%}.login-card .btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:420px){.turnstile-wrap{margin-left:-2px;margin-right:-2px}}
+
+/* Mobile layout safeguards */
+@media(max-width:900px){.content,.main-content,main{max-width:100%;min-width:0}.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}input,select,textarea{max-width:100%}}
+@media(max-width:640px){.content,.main-content{padding:16px!important}.panel-head{flex-wrap:wrap;gap:12px}.grid,.form-grid{grid-template-columns:1fr!important}.toolbar,.filters,.actions{flex-wrap:wrap}.hero{padding:20px!important}.table-wrap{width:100%}button,.btn,input,select{font-size:16px}}
