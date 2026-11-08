@@ -43,6 +43,7 @@ const EMPLOYER_NAV=[
   {id:'pools',label:'Pools',icon:'◉',feature:'random_pool'},
   {id:'selections',label:'Selections',icon:'◎',feature:'random_selections'},
   {id:'testing',label:'Testing',icon:'✓',feature:'testing_orders'},
+  {id:'occupational-health',label:'Occupational Health',icon:'✚',feature:'testing_orders'},
   {id:'results',label:'Results',icon:'◆',feature:'results_summary'},
   {id:'compliance',label:'Compliance',icon:'⚑',feature:'compliance'},
   {id:'post-accident',label:'Post-Accident',icon:'!',feature:'post_accident'},
@@ -81,6 +82,7 @@ function shell(ctx){
   const current=page();
   document.body.dataset.portalPage=norm(current);
   NAV=Array.isArray(ctx?.navigation)&&ctx.navigation.length?ctx.navigation:employerNavigation(ctx);
+  if(isCtpaCustomer(ctx)&&!NAV.some(x=>norm(x.id)==='occupational_health')){const n=NAV.findIndex(x=>norm(x.id)==='testing');NAV.splice(n<0?NAV.length:n+1,0,{id:'occupational-health',label:'Occupational Health',icon:'✚',href:'/occupational-health.html'});}
   const planLabel=isCtpaCustomer(ctx)?ctpaName(ctx):(String(ctx?.plan?.name||ctx?.plan?.name||ctx?.subscription?.plan_name||C.label));
   const links=NAV.map(x=>`<a href="${esc(x.href||('/'+x.id+'.html'))}" class="${norm(current)===norm(x.id)?'active':''}"${norm(current)===norm(x.id)?' aria-current="page"':''}><span class="ico">${esc(x.icon||'•')}</span><span>${esc(x.label||pretty(x.id))}</span></a>`).join('');
   document.title=`${cfgPage(current).label} | ${planLabel}`;
@@ -181,6 +183,7 @@ async function ctpaData(p){
 }
 async function employerData(p){
   if(C.kind==='agency')return invoke('workforce-employer-management',{action:'agency_workspace',agency_code:C.agency});
+  if(p==='occupational-health')return invoke('workforce-employer-occupational-health',{action:'list'});
   if(p==='testing')return invoke('workforce-employer-testing',{action:'list'}).catch(()=>invoke('workforce-employer-management',{action:'overview'}));
   if(p==='pools')return invoke('workforce-employer-pools',{action:'workspace'});
   if(p==='selections')return invoke('workforce-employer-pools',{action:'selection_history'}).catch(()=>invoke('workforce-employer-management',{action:'selection_history'}));
@@ -382,7 +385,8 @@ async function render(ctx){
   else if(C.kind==='agency')setSubtitle(`${C.agency} company management workspace. Changes apply only to your company.`);
   else setSubtitle('Manage your DOT company records, covered drivers/employees, programs, testing and compliance.');
   let html='';
-  if(p==='dashboard')html=dashboard(ctx,d);
+  if(p==='occupational-health'&&window.EmployerOccupationalHealth){setSubtitle('View and download occupational-health donor passes delivered by your C/TPA.');html=window.EmployerOccupationalHealth.render(d);}
+  else if(p==='dashboard')html=dashboard(ctx,d);
   else if(p==='onboarding'){setSubtitle('Use this checklist to finish Employer setup and learn where each DOT workflow lives.');html=onboardingView(ctx,d);}
   else if(p==='pools'&&window.PortalPools){setSubtitle(C.kind==='ctpa'?'Create consortium pools and manage eligible pool membership.':'Manage random pools and pool participation for this Employer.');html=window.PortalPools.render(d,ctx);}
   else if(p==='order-services'){
@@ -436,6 +440,7 @@ async function render(ctx){
     wireManagementActions(p,d,ctx);
   }
   $('#content').innerHTML=html||`<div class="panel"><div class="empty">No data available.</div></div>`;
+  if(p==='occupational-health'&&window.EmployerOccupationalHealth)window.EmployerOccupationalHealth.bind(d);
   if(p==='people'&&C.kind==='employer')bindWorkerEdits(d);
   if(p==='pools'&&window.PortalPools)window.PortalPools.bind(d,ctx);
   if(p==='notifications'&&window.EmployerNotifications)window.EmployerNotifications.bind(d,ctx);
