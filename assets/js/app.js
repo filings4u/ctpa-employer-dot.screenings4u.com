@@ -327,6 +327,15 @@ function wireManagementActions(p,d,ctx){
       return invoke('workforce-employer-management',{action:'save_program',program});
     });
   });
+  if(p==='testing'&&C.kind==='employer'&&isCtpaCustomer(ctx)&&(d.random_selections||[]).length)addAction('Create Random Testing Order',()=>{
+    const pending=d.random_selections||[];
+    const options=pending.map(x=>({value:x.selection_member_id,label:`${x.employee_name} — ${x.program_name} — ${pretty(x.test_type)} (${fmt(x.selection_date)})`}));
+    modal('Create Order from C/TPA Random Selection',[{name:'selection_member_id',label:'Pending Random Selection',type:'select',required:true,options}],async v=>{
+      const selected=pending.find(x=>x.selection_member_id===v.selection_member_id);
+      if(!selected)throw new Error('Select a pending C/TPA random selection.');
+      return invoke('workforce-employer-testing',{action:'create',order:{selection_member_id:selected.selection_member_id,employee_id:selected.employee_id,program_id:selected.program_id,pool_id:selected.pool_id,reason:'random',test_type:selected.test_type}});
+    });
+  });
   if(p==='testing')addAction('Create Testing Order',()=>{
     const employees=(d.employees||[]).filter(x=>x.dot_covered!==false),programs=(d.programs||[]).filter(x=>String(x.program_type||'DOT').toUpperCase()==='DOT'),employers=d.employers||[];
     const fields=[];
@@ -417,6 +426,11 @@ async function render(ctx){
     else if(p==='consents'&&window.EmployerConsents){setSubtitle('Create, edit, send, and track DOT agency-specific consent forms and acknowledgments for your covered employees.');html=window.EmployerConsents.render(d,ctx);}
     else if(p==='company'){html=profileView(d)+(isCtpaCustomer(ctx)?`<div class="section notice"><strong>${esc(ctpaName(ctx))} manages this DOT program.</strong> You can add and edit drivers/employees, request tests, upload documents, reply to messages, review invoices, and create support requests from your customer portal.</div>`:(!d.employer?.applicable_dot_agency?`<div class="section notice"><strong>DOT agency setup required.</strong> Choose FMCSA, FAA, FRA, FTA, PHMSA, or USCG before creating regulated DOT activity.</div>`:''));}
     else if(p==='reports')html=`<div class="metrics">${metric('Testing',(d.testing||d.testing_orders||[]).length)}${metric('Programs',(d.program_enrollment||d.programs||[]).length)}${metric('Pools',(d.pool_membership||d.pools||[]).length)}${metric('Compliance',(d.compliance||d.cases||[]).length)}</div>`;
+    else if(p==='testing'&&isCtpaCustomer(ctx)){
+      const pending=d.random_selections||[];
+      const cards=pending.map(x=>`<div class="section" style="padding:14px;border-bottom:1px solid #dbe4ef"><strong>${esc(x.employee_name)}</strong> — ${esc(x.program_name)}<div style="margin-top:6px;font-size:12px">Pool: ${esc(x.pool_name)} · Test: ${esc(pretty(x.test_type))} · Selected: ${esc(fmt(x.selection_date))}</div></div>`).join('');
+      html=`<div class="panel"><div class="panel-head"><div><h2>C/TPA Random Selections — Awaiting Testing Orders</h2><p>Orders created here retain the original locked C/TPA selection and required test type.</p></div><span class="pill">${pending.length} pending</span></div>${cards||'<div class="empty">No pending C/TPA random selections.</div>'}</div><div class="section">${table('Testing Orders',d.orders||d.testing_orders||[],COLS.testing)}</div>`;
+    }
     else if(p==='post-accident')html=`<div class="notice">Post-accident activity is managed through Testing and Compliance. DOT service purchases are available from Order Services.</div><div class="section">${table('Post-Accident Testing',(d.testing_orders||[]).filter(x=>norm(x.reason)==='post_accident'),COLS.testing)}</div>`;
     else {const [rows,key]=pickManagementRows(p,d);html=p==='people'?employeeTable(cfgPage(p).label,rows):(key?table(cfgPage(p).label,rows,COLS[key]):`<div class="panel"><div class="empty">No records available.</div></div>`)}
     wireManagementActions(p,d,ctx);
