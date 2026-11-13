@@ -55,6 +55,7 @@ const EMPLOYER_NAV=[
   {id:'notifications',label:'Notifications',icon:'●',feature:'notifications'},
   {id:'branding',label:'Branding',icon:'✦',feature:'white_label'},
   {id:'team',label:'Team',icon:'♟',feature:'team_users'},
+  {id:'messages',label:'Private C/TPA Messages',icon:'✉',core:true},
   {id:'support',label:'Support',icon:'?',core:true}
 ];
 function employerNavigation(ctx){const e=ctx?.entitlements||{},ctpa=!!ctx?.employer?.ctpa_id;return EMPLOYER_NAV.filter(x=>{if(ctpa&&['team','branding'].includes(x.id))return false;return x.core||!x.feature||e[x.feature]===true}).map(x=>({...x,href:`/${x.id}.html`}))}
@@ -82,6 +83,7 @@ function shell(ctx){
   const current=page();
   document.body.dataset.portalPage=norm(current);
   NAV=Array.isArray(ctx?.navigation)&&ctx.navigation.length?ctx.navigation:employerNavigation(ctx);
+  if(isCtpaCustomer(ctx)&&!NAV.some(x=>norm(x.id)==='messages'))NAV.push({id:'messages',label:'Private C/TPA Messages',icon:'✉',href:'/messages.html'});
   if(isCtpaCustomer(ctx)&&!NAV.some(x=>norm(x.id)==='occupational_health')){const n=NAV.findIndex(x=>norm(x.id)==='testing');NAV.splice(n<0?NAV.length:n+1,0,{id:'occupational-health',label:'Occupational Health',icon:'✚',href:'/occupational-health.html'});}
   const planLabel=isCtpaCustomer(ctx)?ctpaName(ctx):(String(ctx?.plan?.name||ctx?.plan?.name||ctx?.subscription?.plan_name||C.label));
   const links=NAV.map(x=>`<a href="${esc(x.href||('/'+x.id+'.html'))}" class="${norm(current)===norm(x.id)?'active':''}"${norm(current)===norm(x.id)?' aria-current="page"':''}><span class="ico">${esc(x.icon||'•')}</span><span>${esc(x.label||pretty(x.id))}</span></a>`).join('');
